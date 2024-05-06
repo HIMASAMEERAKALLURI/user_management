@@ -73,6 +73,7 @@ services:
 volumes:
   postgres-data:
   pgadmin-data:
+  minio-data:
 
 networks:
   app-network:
