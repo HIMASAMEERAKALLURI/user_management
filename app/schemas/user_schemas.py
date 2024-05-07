@@ -40,7 +40,6 @@ class UserBase(BaseModel):
     role: UserRole
 
     _validate_urls = validator(
-        "profile_picture_url",
         "linkedin_profile_url",
         "github_profile_url",
         pre=True,
