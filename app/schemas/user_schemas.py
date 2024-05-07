@@ -18,6 +18,16 @@ def validate_url(url: Optional[str]) -> Optional[str]:
     return url
 
 
+def validate_relative_url(url: Optional[str]) -> Optional[str]:
+    try:
+        return validate_url(url)
+    except ValueError as e:
+        rel_regex = re.compile(r"^/[^/\s]+(?:/[^/\s]+)*$")
+        if not re.match(rel_regex, url):
+            raise e
+        return url
+
+
 class UserBase(BaseModel):
     email: EmailStr = Field(..., example="john.doe@example.com")
     nickname: Optional[str] = Field(
@@ -45,6 +55,10 @@ class UserBase(BaseModel):
         pre=True,
         allow_reuse=True,
     )(validate_url)
+
+    _validate_profile_picture_url = validator(
+        "profile_picture_url", pre=True, allow_reuse=True
+    )(validate_relative_url)
 
     class Config:
         from_attributes = True
