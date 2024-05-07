@@ -174,14 +174,6 @@ async def test_account_lock_after_failed_logins(db_session, verified_user):
     ), "The account should be locked after the maximum number of failed login attempts."
 
 
-# Test locked account cannot login
-async def test_locked_account_cannot_login(db_session, locked_user):
-    user = await UserService.login_user(
-        db_session, locked_user.email, "MySuperPassword$1234"
-    )
-    assert user is None
-
-
 # Test resetting a user's password
 async def test_reset_password(db_session, user):
     new_password = "NewPassword123!"
@@ -206,6 +198,14 @@ async def test_unlock_user_account(db_session, locked_user):
     assert not refreshed_user.is_locked, "The user should no longer be locked"
 
 
+# Test locked account cannot login
+async def test_locked_account_cannot_login(db_session, locked_user):
+    user = await UserService.login_user(
+        db_session, locked_user.email, "MySuperPassword$1234"
+    )
+    assert user is None, "The locked user should not be able to login"
+
+
 # Test unlocked user can login
 async def test_unlocked_user_can_login(db_session, locked_user):
     unlocked = await UserService.unlock_user_account(db_session, locked_user.id)
@@ -213,21 +213,24 @@ async def test_unlocked_user_can_login(db_session, locked_user):
     user = await UserService.login_user(
         db_session, locked_user.email, "MySuperPassword$1234"
     )
-    assert user is not None, "The user should be able to login"
+    assert user is not None, "The unlocked user should be able to login"
 
 
 # Test user has default profile picture
 async def test_user_has_default_profile_picture(user):
     url = "/uploads/default/avatar.jpeg"
-    assert user.profile_picture_url == url
-    assert UserService.profile_picture_exists_in_minio(url, user.email)
+    assert (
+        user.profile_picture_url == url
+    ), "The user should have the default profile picture"
+    exists = UserService.profile_picture_exists_in_minio(url, user.email)
+    assert exists, "The default profile picture should exist in MinIO"
 
 
 # Test uploading a profile photo
 async def test_upload_invalid_profile_photo(db_session, user):
     image = construct_upload_file("assets/text.txt", "text/plain")
     success = await UserService.upload_profile_picture(db_session, user.email, image)
-    assert success is False
+    assert success is False, "The text file should not be uploaded"
 
 
 # Test uploading a profile photo
@@ -240,4 +243,6 @@ async def test_upload_profile_photo(db_session, user):
     assert (
         user.profile_picture_url == profile_picture_url
     ), "The profile photo URL should be correct"
-    assert UserService.profile_picture_exists_in_minio(profile_picture_url, user.email)
+    assert UserService.profile_picture_exists_in_minio(
+        profile_picture_url, user.email
+    ), "The profile photo should exist in MinIO"
