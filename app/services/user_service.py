@@ -275,6 +275,8 @@ class UserService:
         :param file: The file object containing the profile picture.
         :return: True if the profile picture was uploaded successfully, False otherwise.
         """
+        if not file.content_type.startswith("image"):
+            return False
         user = await cls.get_by_email(session, email)
         if not user:
             return False

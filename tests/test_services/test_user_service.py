@@ -217,7 +217,6 @@ async def test_unlocked_user_can_login(db_session, locked_user):
 
 
 # Test user has default profile picture
-@pytest.mark.slow
 async def test_user_has_default_profile_picture(user):
     url = "/uploads/default/avatar.jpeg"
     assert user.profile_picture_url == url
@@ -225,7 +224,13 @@ async def test_user_has_default_profile_picture(user):
 
 
 # Test uploading a profile photo
-@pytest.mark.slow
+async def test_upload_invalid_profile_photo(db_session, user):
+    image = construct_upload_file("assets/text.txt", "text/plain")
+    success = await UserService.upload_profile_picture(db_session, user.email, image)
+    assert success is False
+
+
+# Test uploading a profile photo
 async def test_upload_profile_photo(db_session, user):
     image = construct_upload_file("assets/image.jpeg")
     await UserService.upload_profile_picture(db_session, user.email, image)
